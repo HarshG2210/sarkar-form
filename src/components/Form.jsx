@@ -43,8 +43,13 @@ const Form = () => {
     navigate(`/details?${queryParams}`);
   };
 
+  const baseUrl =
+    import.meta.env.MODE === "development"
+      ? window.location.origin
+      : "https://sarkar-form.vercel.app";
+
   const queryParams = new URLSearchParams(formData).toString();
-  const qrUrl = `https://sarkar-form.vercel.app/details?${queryParams}`;
+  const qrUrl = `${baseUrl}/details?${queryParams}`;
 
   return (
     <div>
