@@ -44,7 +44,7 @@ const Form = () => {
   };
 
   const queryParams = new URLSearchParams(formData).toString();
-  const qrUrl = `http://192.168.1.5:5174/details?${queryParams}`;
+  const qrUrl = `https://sarkar-form.vercel.app/details?${queryParams}`;
 
   return (
     <div>
