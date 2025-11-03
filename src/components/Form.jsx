@@ -14,18 +14,18 @@ const Form = () => {
   const [qrVisible, setQrVisible] = useState(false);
   const navigate = useNavigate();
 
-  // 🔹 handle input change
+  // Handle input change
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // 🔹 submit form
+  // Submit handler
   const handleSubmit = (e) => {
     e.preventDefault();
     setQrVisible(true);
   };
 
-  // 🔹 clear all inputs
+  // Clear all inputs
   const handleClear = () => {
     setFormData({
       entryNo: "",
@@ -37,7 +37,7 @@ const Form = () => {
     setQrVisible(false);
   };
 
-  // 🔹 redirect to details page with query params
+  // Redirect to details page
   const handleRedirect = () => {
     const queryParams = new URLSearchParams(formData).toString();
     navigate(`/details?${queryParams}`);
@@ -52,147 +52,200 @@ const Form = () => {
   const qrUrl = `${baseUrl}/details?${queryParams}`;
 
   return (
-    <div>
-      <form
-        onSubmit={handleSubmit}
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#0b2b52",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "1rem",
+      }}
+    >
+      <div
         style={{
-          maxWidth: "500px",
-          margin: "auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: "1rem",
+          background: "#fff",
+          borderRadius: "12px",
+          padding: "2rem",
+          width: "100%",
+          maxWidth: "520px",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.2)",
         }}
       >
-        <label>
-          दाखला क्रमांक:
-          <input
-            type="text"
-            name="entryNo"
-            value={formData.entryNo}
-            onChange={handleChange}
-            required
-          />
-        </label>
+        <h2
+          style={{
+            textAlign: "center",
+            color: "#0078d7",
+            marginBottom: "1rem",
+          }}
+        >
+          प्रमाणपत्र (दाखला) फॉर्म
+        </h2>
 
-        <label>
-          दाखल्याचे नाव:
-          <input
-            type="text"
-            name="entryName"
-            value={formData.entryName}
-            onChange={handleChange}
-            required
-          />
-        </label>
-
-        <label>
-          दाखला मागणी केलेल्या व्यक्तीचे नाव:
-          <input
-            type="text"
-            name="applicantName"
-            value={formData.applicantName}
-            onChange={handleChange}
-            required
-          />
-        </label>
-
-        <label>
-          ग्रामसेवकाचे नाव:
-          <input
-            type="text"
-            name="gramsevakName"
-            value={formData.gramsevakName}
-            onChange={handleChange}
-            required
-          />
-        </label>
-
-        <label>
-          दाखला वितरण दिनांक:
-          <input
-            type="date"
-            name="issueDate"
-            value={formData.issueDate}
-            onChange={handleChange}
-            required
-          />
-        </label>
-
-        {/* Buttons Section */}
-        <div
+        <form
+          onSubmit={handleSubmit}
           style={{
             display: "flex",
-            justifyContent: "space-between",
+            flexDirection: "column",
             gap: "1rem",
           }}
         >
-          <button
-            type="submit"
+          <label style={{ fontWeight: 500 }}>
+            दाखला क्रमांक:
+            <input
+              type="text"
+              name="entryNo"
+              value={formData.entryNo}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. 54679661200037"
+            />
+          </label>
+
+          <label style={{ fontWeight: 500 }}>
+            दाखल्याचे नाव:
+            <input
+              type="text"
+              name="entryName"
+              value={formData.entryName}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. विवाह नोंद दाखला"
+            />
+          </label>
+
+          <label style={{ fontWeight: 500 }}>
+            दाखला मागणी केलेल्या व्यक्तीचे नाव:
+            <input
+              type="text"
+              name="applicantName"
+              value={formData.applicantName}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. सुरेश बळे"
+            />
+          </label>
+
+          <label style={{ fontWeight: 500 }}>
+            ग्रामसेवकाचे नाव:
+            <input
+              type="text"
+              name="gramsevakName"
+              value={formData.gramsevakName}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. पांचाळ मधुकर वामनराव"
+            />
+          </label>
+
+          <label style={{ fontWeight: 500 }}>
+            दाखला वितरण दिनांक:
+            <input
+              type="date"
+              name="issueDate"
+              value={formData.issueDate}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+            />
+          </label>
+
+          {/* Action Buttons */}
+          <div
             style={{
-              flex: 1,
-              padding: "0.6rem",
-              background: "#0078d7",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: "5px",
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "1rem",
             }}
           >
-            QR Code
-          </button>
+            <button type="submit" style={primaryButton}>
+              QR कोड तयार करा
+            </button>
+            <button type="button" onClick={handleClear} style={dangerButton}>
+              सर्व साफ करा
+            </button>
+          </div>
 
           <button
             type="button"
-            onClick={handleClear}
-            style={{
-              flex: 1,
-              padding: "0.6rem",
-              background: "#f44336",
-              color: "white",
-              border: "none",
-              cursor: "pointer",
-              borderRadius: "5px",
-            }}
-          >
-            Clear All
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleRedirect}
-          disabled={
-            !formData.entryNo ||
-            !formData.entryName ||
-            !formData.applicantName ||
-            !formData.gramsevakName ||
-            !formData.issueDate
-          }
-          style={{
-            marginTop: "1rem",
-            padding: "0.6rem",
-            background: "#4caf50",
-            color: "white",
-            border: "none",
-            cursor: "pointer",
-            borderRadius: "5px",
-            opacity:
+            onClick={handleRedirect}
+            disabled={
               !formData.entryNo ||
               !formData.entryName ||
               !formData.applicantName ||
               !formData.gramsevakName ||
               !formData.issueDate
-                ? 0.6
-                : 1,
-          }}
-        >
-          Details
-        </button>
-      </form>
+            }
+            style={{
+              ...successButton,
+              opacity:
+                !formData.entryNo ||
+                !formData.entryName ||
+                !formData.applicantName ||
+                !formData.gramsevakName ||
+                !formData.issueDate
+                  ? 0.6
+                  : 1,
+            }}
+          >
+            तपशील पृष्ठावर जा
+          </button>
+        </form>
 
-      {qrVisible && <QRCodeDisplay qrUrl={qrUrl} />}
+        {/* QR Display */}
+        {qrVisible && <QRCodeDisplay qrUrl={qrUrl} />}
+      </div>
     </div>
   );
+};
+
+// 🎨 Reusable Styles
+const inputStyle = {
+  width: "100%",
+  marginTop: "4px",
+  padding: "0.5rem",
+  borderRadius: "6px",
+  border: "1px solid #ccc",
+  fontSize: "15px",
+  outlineColor: "#0078d7",
+};
+
+const primaryButton = {
+  flex: 1,
+  padding: "0.6rem",
+  background: "#0078d7",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontWeight: "500",
+};
+
+const dangerButton = {
+  flex: 1,
+  padding: "0.6rem",
+  background: "#f44336",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontWeight: "500",
+};
+
+const successButton = {
+  marginTop: "1rem",
+  width: "100%",
+  padding: "0.7rem",
+  background: "#4caf50",
+  color: "white",
+  border: "none",
+  borderRadius: "6px",
+  cursor: "pointer",
+  fontWeight: "500",
 };
 
 export default Form;

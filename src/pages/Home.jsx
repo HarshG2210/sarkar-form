@@ -2,7 +2,7 @@ import Form from "../components/Form";
 
 const Home = () => {
   return (
-    <div style={{ padding: "2rem", fontFamily: "Poppins, sans-serif" }}>
+    <div style={{ fontFamily: "Poppins, sans-serif" }}>
       <h1 style={{ textAlign: "center", color: "#0078d7" }}>
         प्रमाणपत्र (दाखला) फॉर्म
       </h1>
