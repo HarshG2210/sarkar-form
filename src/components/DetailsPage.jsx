@@ -1,3 +1,4 @@
+// src/components/DetailsPage.js (Updated to display new fields)
 import React from "react";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/aple-sarkar-logo.png"; // 🔹 add the logo image in src/assets/
@@ -5,6 +6,13 @@ import logo from "../assets/aple-sarkar-logo.png"; // 🔹 add the logo image in
 const DetailsPage = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
+
+  // Format date from YYYY-MM-DD to DD-MM-YYYY if needed
+  const formatDate = (dateStr) => {
+    if (!dateStr) return "----";
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
+  };
 
   return (
     <div
@@ -37,9 +45,6 @@ const DetailsPage = () => {
           <h2 style={{ color: "#0078d7", marginBottom: "0.5rem" }}>
             प्रमाणपत्र (दाखला) सत्यापन
           </h2>
-          <p style={{ color: "#000", fontWeight: 500, marginBottom: "1.5rem" }}>
-            ग्रामपंचायत - पोखर्णी, तालुका - परभणी, जिल्हा - परभणी
-          </p>
         </div>
 
         {/* Certificate Box */}
@@ -68,7 +73,17 @@ const DetailsPage = () => {
           </p>
           <p>
             <strong>दाखला वितरण दिनांक:</strong>{" "}
-            {query.get("issueDate") || "----"}
+            {formatDate(query.get("issueDate"))}
+          </p>
+          {/* New Fields Display */}
+          <p>
+            <strong>ग्रामपंचायत:</strong> {query.get("gramPanchayat") || "----"}
+          </p>
+          <p>
+            <strong>तालुका:</strong> {query.get("taluka") || "----"}
+          </p>
+          <p>
+            <strong>जिल्हा:</strong> {query.get("district") || "----"}
           </p>
         </div>
 
@@ -81,8 +96,9 @@ const DetailsPage = () => {
             lineHeight: "1.6",
           }}
         >
-          * वरील दाखला ग्रामपंचायत पोखर्णी, तालुका - परभणी, जिल्हा - परभणी यांचे
-          वतीने वितरित केलेला आहे.
+          * वरील दाखला ग्रामपंचायत {query.get("gramPanchayat") || "पोखर्णी"},
+          तालुका - {query.get("taluka") || "परभणी"}, जिल्हा -{" "}
+          {query.get("district") || "परभणी"} यांचे वतीने वितरित केलेला आहे.
         </p>
       </div>
     </div>

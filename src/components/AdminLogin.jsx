@@ -1,4 +1,4 @@
-// src/components/AdminLogin.js (Updated - Auto-redirect if already logged in)
+// src/components/AdminLogin.js (Updated with Eye Icon for Password)
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,6 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 const AdminLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
@@ -73,7 +74,7 @@ const AdminLogin = () => {
           style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
         >
           <input
-            type="alphabet"
+            type="text"
             placeholder="User Id"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -87,21 +88,40 @@ const AdminLogin = () => {
               outlineColor: "#0078d7",
             }}
           />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{
-              width: "100%",
-              padding: "0.5rem",
-              borderRadius: "6px",
-              border: "1px solid #ccc",
-              fontSize: "15px",
-              outlineColor: "#0078d7",
-            }}
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{
+                width: "100%",
+                padding: "0.5rem",
+                borderRadius: "6px",
+                border: "1px solid #ccc",
+                fontSize: "15px",
+                outlineColor: "#0078d7",
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "16px",
+                color: "#666",
+              }}
+            >
+              {showPassword ? "👁" : "👁‍🗨"}
+            </button>
+          </div>
           {error && (
             <p style={{ color: "red", textAlign: "center" }}>{error}</p>
           )}

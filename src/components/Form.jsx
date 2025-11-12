@@ -1,9 +1,13 @@
+// src/components/Form.js (Updated with Gram Panchayat, Taluka, District fields)
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QRCodeDisplay from "./QRCodeDisplay";
 
 const Form = () => {
   const [formData, setFormData] = useState({
+    gramPanchayat: "", // New field
+    taluka: "", // New field
+    district: "", // New field
     entryNo: "",
     entryName: "",
     applicantName: "",
@@ -28,6 +32,9 @@ const Form = () => {
   // Clear all inputs
   const handleClear = () => {
     setFormData({
+      gramPanchayat: "",
+      taluka: "",
+      district: "",
       entryNo: "",
       entryName: "",
       applicantName: "",
@@ -154,6 +161,46 @@ const Form = () => {
             />
           </label>
 
+          {/* New Fields */}
+          <label style={{ fontWeight: 500 }}>
+            ग्रामपंचायत:
+            <input
+              type="text"
+              name="gramPanchayat"
+              value={formData.gramPanchayat}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. पोखर्णी"
+            />
+          </label>
+
+          <label style={{ fontWeight: 500 }}>
+            तालुका:
+            <input
+              type="text"
+              name="taluka"
+              value={formData.taluka}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. परभणी"
+            />
+          </label>
+
+          <label style={{ fontWeight: 500 }}>
+            जिल्हा:
+            <input
+              type="text"
+              name="district"
+              value={formData.district}
+              onChange={handleChange}
+              required
+              style={inputStyle}
+              placeholder="उदा. परभणी"
+            />
+          </label>
+
           {/* Action Buttons */}
           <div
             style={{
@@ -178,7 +225,10 @@ const Form = () => {
               !formData.entryName ||
               !formData.applicantName ||
               !formData.gramsevakName ||
-              !formData.issueDate
+              !formData.issueDate ||
+              !formData.gramPanchayat ||
+              !formData.taluka ||
+              !formData.district
             }
             style={{
               ...successButton,
@@ -187,7 +237,10 @@ const Form = () => {
                 !formData.entryName ||
                 !formData.applicantName ||
                 !formData.gramsevakName ||
-                !formData.issueDate
+                !formData.issueDate ||
+                !formData.gramPanchayat ||
+                !formData.taluka ||
+                !formData.district
                   ? 0.6
                   : 1,
             }}
@@ -203,7 +256,7 @@ const Form = () => {
   );
 };
 
-// 🎨 Reusable Styles
+// 🎨 Reusable Styles (unchanged)
 const inputStyle = {
   width: "100%",
   marginTop: "4px",
