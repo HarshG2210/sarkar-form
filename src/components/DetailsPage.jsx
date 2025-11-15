@@ -1,13 +1,14 @@
 // src/components/DetailsPage.js (Updated to display new fields)
 import React from "react";
 import { useLocation } from "react-router-dom";
-import logo from "../assets/aple-sarkar-logo.png"; // 🔹 add the logo image in src/assets/
+import logo from "../assets/aple-sarkar-logo.png";
+import "./DetailsPage.css";
 
 const DetailsPage = () => {
   const { search } = useLocation();
+  // const navigate = useNavigate();
   const query = new URLSearchParams(search);
 
-  // Format date from YYYY-MM-DD to DD-MM-YYYY if needed
   const formatDate = (dateStr) => {
     if (!dateStr) return "----";
     const [year, month, day] = dateStr.split("-");
@@ -100,6 +101,15 @@ const DetailsPage = () => {
           तालुका - {query.get("taluka") || "परभणी"}, जिल्हा -{" "}
           {query.get("district") || "परभणी"} यांचे वतीने वितरित केलेला आहे.
         </p>
+        <div style={{ marginTop: "1rem" }}>
+          <button
+            className="back-button"
+            title="back"
+            // onClick={() => navigate(-1)}
+          >
+            Back
+          </button>
+        </div>
       </div>
     </div>
   );
