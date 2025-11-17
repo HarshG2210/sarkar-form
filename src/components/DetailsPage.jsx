@@ -1,6 +1,6 @@
-// src/components/DetailsPage.js (decrypts 'data' param if present)
-import React, { useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+// src/components/DetailsPage.js (scroll-to-top only)
+import React, { useMemo, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
@@ -55,19 +55,19 @@ const decryptData = (ciphertext) => {
 const DetailsPage = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
-  const navigate = useNavigate();
 
-  // Try decrypting `data` param first; if not present or fails, fall back to plain query params
+  // scrollable container ref
+  const cardRef = useRef(null);
+
+  // decrypt if available
   const decrypted = useMemo(() => {
-    const dataParam =
+    const encrypted =
       query.get("data") || query.get("Data") || query.get("encrypted");
-    if (!dataParam) return null;
-    // decoded value is encodedURIComponent in URL — decode first
-    const decoded = decodeURIComponent(dataParam);
-    return decryptData(decoded);
+    if (!encrypted) return null;
+    return decryptData(decodeURIComponent(encrypted));
   }, [search]);
 
-  // prefer decrypted values, fallback to query params
+  // prefer decrypted
   const entryNo = decrypted?.entryNo ?? query.get("entryNo") ?? "----";
   const entryName = decrypted?.entryName ?? query.get("entryName") ?? "----";
   const applicantName =
@@ -80,8 +80,16 @@ const DetailsPage = () => {
   const taluka = decrypted?.taluka ?? query.get("taluka") ?? "----";
   const district = decrypted?.district ?? query.get("district") ?? "----";
 
-  // Optional: if no decrypted data and no plain params, you might want to redirect or show a message.
-  // But functionality preserved: we display whatever is available.
+  // ⭐ Smooth scroll to top inside this card ONLY
+  const scrollToTop = () => {
+    if (cardRef.current) {
+      cardRef.current.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+    }
+  };
+
   return (
     <div
       style={{
@@ -94,7 +102,9 @@ const DetailsPage = () => {
         fontFamily: `"Noto Sans Devanagari", "Segoe UI", Roboto, sans-serif`,
       }}
     >
+      {/* Scrollable card */}
       <div
+        ref={cardRef}
         style={{
           backgroundColor: "white",
           borderRadius: "10px",
@@ -102,9 +112,11 @@ const DetailsPage = () => {
           maxWidth: "500px",
           width: "100%",
           padding: "1.5rem",
+          maxHeight: "calc(100vh - 40px)",
+          overflowY: "auto",
         }}
       >
-        {/* Logo and Title */}
+        {/* Logo + Title */}
         <div style={{ textAlign: "center" }}>
           <img src={logo} alt="आपले सरकार" style={{ width: "120px" }} />
 
@@ -116,43 +128,30 @@ const DetailsPage = () => {
               alignItems: "center",
               justifyContent: "center",
               gap: "10px",
-              fontSize: "clamp(16px, 4vw, 24px)", // responsive font size
+              fontSize: "clamp(16px, 4vw, 24px)",
               fontWeight: 700,
-              flexWrap: "nowrap", // do not allow wrapping
-              whiteSpace: "nowrap", // text stays on one line
+              flexWrap: "nowrap",
+              whiteSpace: "nowrap",
               overflow: "hidden",
-              textOverflow: "ellipsis", // safe fallback if space is extremely tight
+              textOverflow: "ellipsis",
             }}
           >
             <img
               src={certificate}
-              alt="aple sarkar"
+              alt="certificate"
               style={{
-                width: "clamp(32px, 8vw, 50px)", // responsive icon size
-                height: "auto",
-                flexShrink: 0, // keep icon from shrinking too much
-                display: "block",
+                width: "clamp(32px, 8vw, 50px)",
+                flexShrink: 0,
               }}
             />
-            <span
-              style={{
-                display: "inline-block",
-                lineHeight: 1,
-                minWidth: 0, // allows ellipsising on the span if needed
-              }}
-            >
+            <span style={{ lineHeight: 1, minWidth: 0 }}>
               प्रमाणपत्र (दाखला) सत्यापन
             </span>
           </h2>
 
-          {/* New Fields Display */}
-          <p
-            style={{
-              fontSize: "15px",
-            }}
-          >
-            ग्रामपंचायत - {gramPanchayat || "----"}, तालुका - {taluka || "----"}
-            , जिल्हा - {district || "----"}
+          <p style={{ fontSize: "15px" }}>
+            ग्रामपंचायत - {gramPanchayat}, तालुका - {taluka}, जिल्हा -{" "}
+            {district}
           </p>
         </div>
 
@@ -170,23 +169,21 @@ const DetailsPage = () => {
           <p>
             दाखला क्रमांक -{" "}
             <strong>
-              {entryNo && entryNo !== "----"
-                ? toMarathiDigits(entryNo)
-                : "----"}
+              {entryNo !== "----" ? toMarathiDigits(entryNo) : "----"}
             </strong>
           </p>
 
           <p>
-            दाखल्याचे नाव - <strong> {entryName}</strong>
+            दाखल्याचे नाव - <strong>{entryName}</strong>
           </p>
 
           <p>
             दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
-            <strong> {applicantName}</strong>
+            <strong>{applicantName}</strong>
           </p>
 
           <p>
-            ग्रामसेवकांचे नाव - <strong> {gramsevakName}</strong>
+            ग्रामसेवकांचे नाव - <strong>{gramsevakName}</strong>
           </p>
 
           <p>
@@ -197,7 +194,7 @@ const DetailsPage = () => {
           </p>
         </div>
 
-        {/* Footer Note: centered */}
+        {/* Footer */}
         <p
           style={{
             fontSize: "14px",
@@ -207,17 +204,13 @@ const DetailsPage = () => {
             textAlign: "center",
           }}
         >
-          * वरील दाखला ग्रामपंचायत {gramPanchayat || "पोखर्णी"}, तालुका -{" "}
-          {taluka || "परभणी"}, जिल्हा - {district || "परभणी"} यांचे वतीने वितरित
-          केलेला आहे.
+          * वरील दाखला ग्रामपंचायत {gramPanchayat}, तालुका - {taluka}, जिल्हा -{" "}
+          {district} यांचे वतीने वितरित केलेला आहे.
         </p>
 
+        {/* Back button (Scroll Only) */}
         <div style={{ marginTop: "1rem", textAlign: "left" }}>
-          <button
-            className="back-button"
-            title="back"
-            onClick={() => navigate(-1)}
-          >
+          <button className="back-button" title="back" onClick={scrollToTop}>
             Back
           </button>
         </div>
