@@ -94,7 +94,6 @@ const DetailsPage = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              gap: "10px",
               fontSize: "24px",
               fontWeight: 700,
             }}
@@ -143,8 +142,7 @@ const DetailsPage = () => {
           </p>
 
           <p>
-            दाखला मागणी केलेल्या व्यक्तीचे नाव{" "}
-            <strong> {applicantName}</strong>
+            दाखला मागणी केलेल्या व्यक्तीचे नाव <strong> {applicantName}</strong>
           </p>
 
           <p>
