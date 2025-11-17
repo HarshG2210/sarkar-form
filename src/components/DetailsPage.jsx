@@ -39,8 +39,6 @@ const formatDateToMarathi = (dateStr) => {
   )}`;
 };
 
-
-
 // decrypt AES ciphertext -> object
 const decryptData = (ciphertext) => {
   try {
@@ -117,16 +115,34 @@ const DetailsPage = () => {
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              fontSize: "24px",
+              gap: "10px",
+              fontSize: "clamp(16px, 4vw, 24px)", // responsive font size
               fontWeight: 700,
+              flexWrap: "nowrap", // do not allow wrapping
+              whiteSpace: "nowrap", // text stays on one line
+              overflow: "hidden",
+              textOverflow: "ellipsis", // safe fallback if space is extremely tight
             }}
           >
             <img
               src={certificate}
               alt="aple sarkar"
-              style={{ width: "50px", height: "50px" }}
+              style={{
+                width: "clamp(32px, 8vw, 50px)", // responsive icon size
+                height: "auto",
+                flexShrink: 0, // keep icon from shrinking too much
+                display: "block",
+              }}
             />
-            <span>प्रमाणपत्र (दाखला) सत्यापन</span>
+            <span
+              style={{
+                display: "inline-block",
+                lineHeight: 1,
+                minWidth: 0, // allows ellipsising on the span if needed
+              }}
+            >
+              प्रमाणपत्र (दाखला) सत्यापन
+            </span>
           </h2>
 
           {/* New Fields Display */}
