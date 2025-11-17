@@ -1,19 +1,65 @@
-// src/components/DetailsPage.js (Updated to display new fields)
+// src/components/DetailsPage.js
 import React from "react";
 import { useLocation } from "react-router-dom";
-import logo from "../assets/aple-sarkar-logo.png";
+import logo from "../assets/logo.png";
+import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
+
+const marathiDigitsMap = {
+  0: "०",
+  1: "१",
+  2: "२",
+  3: "३",
+  4: "४",
+  5: "५",
+  6: "६",
+  7: "७",
+  8: "८",
+  9: "९",
+};
+
+const toMarathiDigits = (input = "") =>
+  String(input)
+    .split("")
+    .map((ch) =>
+      marathiDigitsMap[ch] !== undefined ? marathiDigitsMap[ch] : ch
+    )
+    .join("");
+
+const formatDateToMarathi = (dateStr) => {
+  if (!dateStr) return "----";
+  // expect yyyy-mm-dd or similar
+  const parts = dateStr.split("-");
+  if (parts.length < 3) {
+    // fallback: convert any digits in the whole string
+    return toMarathiDigits(dateStr);
+  }
+  const [year, month, day] = parts;
+  return `${toMarathiDigits(day)}-${toMarathiDigits(month)}-${toMarathiDigits(
+    year
+  )}`;
+};
+
+const safeGet = (query, key, fallback = "----") => {
+  const val = query.get(key);
+  if (val === null || val === undefined || String(val).trim() === "")
+    return fallback;
+  return val;
+};
 
 const DetailsPage = () => {
   const { search } = useLocation();
-  // const navigate = useNavigate();
   const query = new URLSearchParams(search);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "----";
-    const [year, month, day] = dateStr.split("-");
-    return `${day}-${month}-${year}`;
-  };
+  // fetch values (prefer provided values; fallback to ----)
+  const entryNo = safeGet(query, "entryNo", "----");
+  const entryName = safeGet(query, "entryName", "----");
+  const applicantName = safeGet(query, "applicantName", "----");
+  const gramsevakName = safeGet(query, "gramsevakName", "----");
+  const issueDateRaw = query.get("issueDate") || "";
+  const gramPanchayat = safeGet(query, "gramPanchayat", "----");
+  const taluka = safeGet(query, "taluka", "----");
+  const district = safeGet(query, "district", "----");
 
   return (
     <div
@@ -24,6 +70,7 @@ const DetailsPage = () => {
         justifyContent: "center",
         alignItems: "center",
         padding: "1rem",
+        fontFamily: `"Noto Sans Devanagari", "Segoe UI", Roboto, sans-serif`,
       }}
     >
       <div
@@ -38,14 +85,37 @@ const DetailsPage = () => {
       >
         {/* Logo and Title */}
         <div style={{ textAlign: "center" }}>
-          <img
-            src={logo}
-            alt="आपले सरकार"
-            style={{ width: "120px", marginBottom: "1rem" }}
-          />
-          <h2 style={{ color: "#0078d7", marginBottom: "0.5rem" }}>
-            प्रमाणपत्र (दाखला) सत्यापन
+          <img src={logo} alt="आपले सरकार" style={{ width: "120px" }} />
+
+          <h2
+            style={{
+              color: "#0078d7",
+              marginBottom: "0.5rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+              fontSize: "24px",
+              fontWeight: 700,
+            }}
+          >
+            <img
+              src={certificate}
+              alt="aple sarkar"
+              style={{ width: "50px", height: "50px" }}
+            />
+            <span>प्रमाणपत्र (दाखला) सत्यापन</span>
           </h2>
+
+          {/* New Fields Display */}
+          <p
+            style={{
+              fontSize: "15px",
+            }}
+          >
+            ग्रामपंचायत - {gramPanchayat || "----"}, तालुका - {taluka || "----"}
+            , जिल्हा - {district || "----"}
+          </p>
         </div>
 
         {/* Certificate Box */}
@@ -56,57 +126,57 @@ const DetailsPage = () => {
             padding: "1rem",
             lineHeight: "1.8",
             fontSize: "15px",
+            marginTop: "1rem",
+            textAlign: "left",
           }}
         >
           <p>
-            <strong>दाखला क्रमांक:</strong> {query.get("entryNo") || "----"}
+            दाखला क्रमांक -{" "}
+            <strong>
+              {entryNo && entryNo !== "----"
+                ? toMarathiDigits(entryNo)
+                : "----"}
+            </strong>
           </p>
+
           <p>
-            <strong>दाखल्याचे नाव:</strong> {query.get("entryName") || "----"}
+            दाखल्याचे नाव - <strong> {entryName}</strong>
           </p>
+
           <p>
-            <strong>दाखला मागणी केलेल्या व्यक्तीचे नाव:</strong>{" "}
-            {query.get("applicantName") || "----"}
+            दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
+            <strong> {applicantName}</strong>
           </p>
+
           <p>
-            <strong>ग्रामसेवकाचे नाव:</strong>{" "}
-            {query.get("gramsevakName") || "----"}
+            ग्रामसेवकांचे नाव - <strong> {gramsevakName}</strong>
           </p>
+
           <p>
-            <strong>दाखला वितरण दिनांक:</strong>{" "}
-            {formatDate(query.get("issueDate"))}
-          </p>
-          {/* New Fields Display */}
-          <p>
-            <strong>ग्रामपंचायत:</strong> {query.get("gramPanchayat") || "----"}
-          </p>
-          <p>
-            <strong>तालुका:</strong> {query.get("taluka") || "----"}
-          </p>
-          <p>
-            <strong>जिल्हा:</strong> {query.get("district") || "----"}
+            दाखला वितरण दिनांक -{" "}
+            <strong>
+              {issueDateRaw ? formatDateToMarathi(issueDateRaw) : "----"}
+            </strong>
           </p>
         </div>
 
-        {/* Footer Note */}
+        {/* Footer Note: centered */}
         <p
           style={{
             fontSize: "14px",
             marginTop: "1.5rem",
             color: "#333",
             lineHeight: "1.6",
+            textAlign: "center",
           }}
         >
-          * वरील दाखला ग्रामपंचायत {query.get("gramPanchayat") || "पोखर्णी"},
-          तालुका - {query.get("taluka") || "परभणी"}, जिल्हा -{" "}
-          {query.get("district") || "परभणी"} यांचे वतीने वितरित केलेला आहे.
+          * वरील दाखला ग्रामपंचायत {gramPanchayat || "पोखर्णी"}, तालुका -{" "}
+          {taluka || "परभणी"}, जिल्हा - {district || "परभणी"} यांचे वतीने वितरित
+          केलेला आहे.
         </p>
-        <div style={{ marginTop: "1rem" }}>
-          <button
-            className="back-button"
-            title="back"
-            // onClick={() => navigate(-1)}
-          >
+
+        <div style={{ marginTop: "1rem", textAlign: "left" }}>
+          <button className="back-button" title="back">
             Back
           </button>
         </div>

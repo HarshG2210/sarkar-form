@@ -137,7 +137,7 @@ const Form = () => {
           </label>
 
           <label style={{ fontWeight: 500 }}>
-            ग्रामसेवकाचे नाव:
+            ग्रामसेवकांचे नाव:
             <input
               type="text"
               name="gramsevakName"
