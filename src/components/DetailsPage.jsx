@@ -1,9 +1,12 @@
-// src/components/DetailsPage.js
-import React from "react";
-import { useLocation } from "react-router-dom";
+// src/components/DetailsPage.js (decrypts 'data' param if present)
+import React, { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import logo from "../assets/logo.png";
 import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
+import CryptoJS from "crypto-js";
+
+const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!"; // must match Form
 
 const marathiDigitsMap = {
   0: "०",
@@ -28,39 +31,59 @@ const toMarathiDigits = (input = "") =>
 
 const formatDateToMarathi = (dateStr) => {
   if (!dateStr) return "----";
-  // expect yyyy-mm-dd or similar
   const parts = dateStr.split("-");
-  if (parts.length < 3) {
-    // fallback: convert any digits in the whole string
-    return toMarathiDigits(dateStr);
-  }
+  if (parts.length < 3) return toMarathiDigits(dateStr);
   const [year, month, day] = parts;
   return `${toMarathiDigits(day)}-${toMarathiDigits(month)}-${toMarathiDigits(
     year
   )}`;
 };
 
-const safeGet = (query, key, fallback = "----") => {
-  const val = query.get(key);
-  if (val === null || val === undefined || String(val).trim() === "")
-    return fallback;
-  return val;
+
+
+// decrypt AES ciphertext -> object
+const decryptData = (ciphertext) => {
+  try {
+    const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
+    const plaintext = bytes.toString(CryptoJS.enc.Utf8);
+    if (!plaintext) throw new Error("Empty plaintext after decryption");
+    return JSON.parse(plaintext);
+  } catch (err) {
+    console.warn("Decryption failed", err);
+    return null;
+  }
 };
 
 const DetailsPage = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
+  const navigate = useNavigate();
 
-  // fetch values (prefer provided values; fallback to ----)
-  const entryNo = safeGet(query, "entryNo", "----");
-  const entryName = safeGet(query, "entryName", "----");
-  const applicantName = safeGet(query, "applicantName", "----");
-  const gramsevakName = safeGet(query, "gramsevakName", "----");
-  const issueDateRaw = query.get("issueDate") || "";
-  const gramPanchayat = safeGet(query, "gramPanchayat", "----");
-  const taluka = safeGet(query, "taluka", "----");
-  const district = safeGet(query, "district", "----");
+  // Try decrypting `data` param first; if not present or fails, fall back to plain query params
+  const decrypted = useMemo(() => {
+    const dataParam =
+      query.get("data") || query.get("Data") || query.get("encrypted");
+    if (!dataParam) return null;
+    // decoded value is encodedURIComponent in URL — decode first
+    const decoded = decodeURIComponent(dataParam);
+    return decryptData(decoded);
+  }, [search]);
 
+  // prefer decrypted values, fallback to query params
+  const entryNo = decrypted?.entryNo ?? query.get("entryNo") ?? "----";
+  const entryName = decrypted?.entryName ?? query.get("entryName") ?? "----";
+  const applicantName =
+    decrypted?.applicantName ?? query.get("applicantName") ?? "----";
+  const gramsevakName =
+    decrypted?.gramsevakName ?? query.get("gramsevakName") ?? "----";
+  const issueDateRaw = decrypted?.issueDate ?? query.get("issueDate") ?? "";
+  const gramPanchayat =
+    decrypted?.gramPanchayat ?? query.get("gramPanchayat") ?? "----";
+  const taluka = decrypted?.taluka ?? query.get("taluka") ?? "----";
+  const district = decrypted?.district ?? query.get("district") ?? "----";
+
+  // Optional: if no decrypted data and no plain params, you might want to redirect or show a message.
+  // But functionality preserved: we display whatever is available.
   return (
     <div
       style={{
@@ -129,7 +152,7 @@ const DetailsPage = () => {
           }}
         >
           <p>
-            दाखला क्रमांक{" "}
+            दाखला क्रमांक -{" "}
             <strong>
               {entryNo && entryNo !== "----"
                 ? toMarathiDigits(entryNo)
@@ -138,19 +161,20 @@ const DetailsPage = () => {
           </p>
 
           <p>
-            दाखल्याचे नाव <strong> {entryName}</strong>
+            दाखल्याचे नाव - <strong> {entryName}</strong>
           </p>
 
           <p>
-            दाखला मागणी केलेल्या व्यक्तीचे नाव <strong> {applicantName}</strong>
+            दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
+            <strong> {applicantName}</strong>
           </p>
 
           <p>
-            ग्रामसेवकांचे नाव <strong> {gramsevakName}</strong>
+            ग्रामसेवकांचे नाव - <strong> {gramsevakName}</strong>
           </p>
 
           <p>
-            दाखला वितरण दिनांक{" "}
+            दाखला वितरण दिनांक -{" "}
             <strong>
               {issueDateRaw ? formatDateToMarathi(issueDateRaw) : "----"}
             </strong>
@@ -173,7 +197,11 @@ const DetailsPage = () => {
         </p>
 
         <div style={{ marginTop: "1rem", textAlign: "left" }}>
-          <button className="back-button" title="back">
+          <button
+            className="back-button"
+            title="back"
+            onClick={() => navigate(-1)}
+          >
             Back
           </button>
         </div>

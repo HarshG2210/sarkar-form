@@ -1,13 +1,16 @@
-// src/components/Form.js (Updated with Gram Panchayat, Taluka, District fields)
+// src/components/Form.js (with AES encryption for URL)
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import QRCodeDisplay from "./QRCodeDisplay";
+import CryptoJS from "crypto-js";
+
+const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!"; // change in .env
 
 const Form = () => {
   const [formData, setFormData] = useState({
-    gramPanchayat: "", // New field
-    taluka: "", // New field
-    district: "", // New field
+    gramPanchayat: "",
+    taluka: "",
+    district: "",
     entryNo: "",
     entryName: "",
     applicantName: "",
@@ -16,6 +19,7 @@ const Form = () => {
   });
 
   const [qrVisible, setQrVisible] = useState(false);
+  const [qrUrl, setQrUrl] = useState("");
   const navigate = useNavigate();
 
   // Handle input change
@@ -23,9 +27,38 @@ const Form = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // Submit handler
+  // encrypt object to base64-like string (AES)
+  const encryptData = (obj) => {
+    try {
+      const plaintext = JSON.stringify(obj);
+      const ciphertext = CryptoJS.AES.encrypt(plaintext, SECRET_KEY).toString();
+      // ciphertext is safe for URLs after encodeURIComponent
+      return ciphertext;
+    } catch (err) {
+      console.error("Encryption failed", err);
+      return null;
+    }
+  };
+
+  // Submit handler (create QR)
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const cipher = encryptData(formData);
+    if (!cipher) {
+      alert("Failed to create QR. Encryption error.");
+      return;
+    }
+
+    const baseUrl =
+      import.meta.env.MODE === "development"
+        ? window.location.origin
+        : "https://www.gp-mahaegram.co.in";
+
+    const encryptedParam = encodeURIComponent(cipher);
+    const url = `${baseUrl}/details?data=${encryptedParam}`;
+
+    setQrUrl(url);
     setQrVisible(true);
   };
 
@@ -42,21 +75,19 @@ const Form = () => {
       issueDate: "",
     });
     setQrVisible(false);
+    setQrUrl("");
   };
 
-  // Redirect to details page
+  // Redirect to details page (encrypted)
   const handleRedirect = () => {
-    const queryParams = new URLSearchParams(formData).toString();
-    navigate(`/details?${queryParams}`);
+    const cipher = encryptData(formData);
+    if (!cipher) {
+      alert("Failed to navigate. Encryption error.");
+      return;
+    }
+
+    navigate(`/details?data=${encodeURIComponent(cipher)}`);
   };
-
-  const baseUrl =
-    import.meta.env.MODE === "development"
-      ? window.location.origin
-      : "https://www.gp-mahaegram.co.in/";
-
-  const queryParams = new URLSearchParams(formData).toString();
-  const qrUrl = `${baseUrl}/details?${queryParams}`;
 
   return (
     <div
