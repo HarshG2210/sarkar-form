@@ -127,11 +127,10 @@ const DetailsPage = () => {
             lineHeight: "1.8",
             fontSize: "15px",
             marginTop: "1rem",
-            textAlign: "left",
           }}
         >
           <p>
-            दाखला क्रमांक -{" "}
+            दाखला क्रमांक{" "}
             <strong>
               {entryNo && entryNo !== "----"
                 ? toMarathiDigits(entryNo)
@@ -140,20 +139,20 @@ const DetailsPage = () => {
           </p>
 
           <p>
-            दाखल्याचे नाव - <strong> {entryName}</strong>
+            दाखल्याचे नाव <strong> {entryName}</strong>
           </p>
 
           <p>
-            दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
+            दाखला मागणी केलेल्या व्यक्तीचे नाव{" "}
             <strong> {applicantName}</strong>
           </p>
 
           <p>
-            ग्रामसेवकांचे नाव - <strong> {gramsevakName}</strong>
+            ग्रामसेवकांचे नाव <strong> {gramsevakName}</strong>
           </p>
 
           <p>
-            दाखला वितरण दिनांक -{" "}
+            दाखला वितरण दिनांक{" "}
             <strong>
               {issueDateRaw ? formatDateToMarathi(issueDateRaw) : "----"}
             </strong>

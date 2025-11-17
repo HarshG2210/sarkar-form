@@ -1,15 +1,65 @@
+/* Responsive overrides for .back-button — paste at the end of your CSS file */
+
+/* ensure box-sizing so padding/width behave predictably on small screens */
 .back-button {
+  box-sizing: border-box;
   background-color: #1d6eea;
-  border-radius: 10%;
-  width: 12%;
-  height: 30px;
-  color: #fff;
   border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  color: #fff; /* FIXED */
 }
 
-.back-button:hover {
-  background-color: #155ab8;
-  transform: scale(1.05);
+/* Small tablets / large phones */
+@media (max-width: 900px) {
+  .back-button {
+    width: 16%; /* slightly larger than 12% on medium screens */
+    min-width: 110px; /* prevents it becoming too narrow */
+    height: 36px;
+    border-radius: 8px; /* a bit softer on smaller devices */
+    font-size: 15px;
+    background-color: #1d6eea;
+    border: none;
+    color: #fff; /* FIXED */
+  }
+}
+
+/* Phones */
+@media (max-width: 520px) {
+  .back-button {
+    width: 40%; /* much more usable width on narrow screens */
+    min-width: 120px; /* readable minimum width */
+    height: 40px;
+    border-radius: 8px;
+    font-size: 15px;
+    background-color: #1d6eea;
+    border: none;
+    color: #fff; /* FIXED */
+  }
+}
+
+/* Very small phones / narrow screens */
+@media (max-width: 360px) {
+  .back-button {
+    width: 48%;
+    min-width: 100px;
+    height: 38px;
+    font-size: 14px;
+    background-color: #1d6eea;
+    border: none;
+    color: #fff; /* FIXED */
+    border-radius: 8px;
+  }
+}
+
+/* Large screens (keeps your original desktop sizing) */
+@media (min-width: 1200px) {
+  .back-button {
+    width: 10%; /* keep it visually small on very large screens */
+    min-width: 120px;
+    height: 34px;
+    font-size: 15px;
+    background-color: #1d6eea;
+    border: none;
+    color: #fff; /* FIXED */
+    border-radius: 8px;
+  }
 }
