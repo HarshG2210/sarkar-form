@@ -1,4 +1,4 @@
-// src/components/DetailsPage.js (scroll-to-top only)
+// src/components/DetailsPage.js (scroll-to-top only — robust & phone-friendly)
 import React, { useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -64,7 +64,11 @@ const DetailsPage = () => {
     const encrypted =
       query.get("data") || query.get("Data") || query.get("encrypted");
     if (!encrypted) return null;
-    return decryptData(decodeURIComponent(encrypted));
+    try {
+      return decryptData(decodeURIComponent(encrypted));
+    } catch {
+      return null;
+    }
   }, [search]);
 
   // prefer decrypted
@@ -80,13 +84,64 @@ const DetailsPage = () => {
   const taluka = decrypted?.taluka ?? query.get("taluka") ?? "----";
   const district = decrypted?.district ?? query.get("district") ?? "----";
 
-  // ⭐ Smooth scroll to top inside this card ONLY
+  /**
+   * Robust smooth scroll-to-top for the card element.
+   * - Tries element.scrollTo({behavior:'smooth'}) first.
+   * - Falls back to a rAF animation if needed (300ms ease).
+   * - As last resort, scroll window.
+   */
   const scrollToTop = () => {
-    if (cardRef.current) {
-      cardRef.current.scrollTo({
-        top: 0,
-        behavior: "smooth",
-      });
+    const el = cardRef.current;
+
+    // helper: rAF smooth animation
+    const animateScroll = (element, from, to, duration = 300) => {
+      const start = performance.now();
+      const easeInOut = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t); // easeInOut
+      const frame = (now) => {
+        const elapsed = now - start;
+        const t = Math.min(1, elapsed / duration);
+        const eased = easeInOut(t);
+        const current = Math.round(from + (to - from) * eased);
+        element.scrollTop = current;
+        if (t < 1) requestAnimationFrame(frame);
+        else element.scrollTop = to; // ensure exact final
+      };
+      requestAnimationFrame(frame);
+    };
+
+    if (el && typeof el.scrollTo === "function") {
+      try {
+        // try native smooth scroll first
+        el.scrollTo({ top: 0, behavior: "smooth" });
+        // Some mobile browsers report smooth scroll but are jumpy; ensure final position after 350ms
+        setTimeout(() => {
+          if (el.scrollTop > 1) {
+            // animate as fallback to guarantee it reaches top smoothly
+            animateScroll(el, el.scrollTop, 0, 300);
+          } else {
+            el.scrollTop = 0;
+          }
+        }, 350);
+        return;
+      } catch {
+        // ignore and fallback to animation
+      }
+    }
+
+    if (el) {
+      // fallback animation
+      animateScroll(el, el.scrollTop || 0, 0, 300);
+      return;
+    }
+
+    // last resort: window scroll
+    try {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      setTimeout(() => {
+        if (window.scrollY > 1) window.scrollTo({ top: 0, behavior: "auto" });
+      }, 350);
+    } catch {
+      window.scrollTo(0, 0);
     }
   };
 

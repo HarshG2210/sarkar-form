@@ -8,6 +8,13 @@
   color: #fff; /* FIXED */
 }
 
+/* Pressable feel */
+.back-button:active {
+  transform: scale(0.94);
+  opacity: 0.85;
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+
 /* Small tablets / large phones */
 @media (max-width: 900px) {
   .back-button {
