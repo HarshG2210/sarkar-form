@@ -14,7 +14,14 @@ const Home = () => {
   };
 
   return (
-    <div style={{ fontFamily: "Poppins, sans-serif" }}>
+    <div
+      style={{
+        fontFamily: "Poppins, sans-serif",
+        margin: 0,
+        padding: 0,
+        boxSizing: "border-box",
+      }}
+    >
       <div
         style={{
           display: "flex",

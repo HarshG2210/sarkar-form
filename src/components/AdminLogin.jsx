@@ -1,4 +1,4 @@
-// src/components/AdminLogin.js (Updated with Eye Icon for Password)
+// src/components/AdminLogin.js (Updated with consistent styling & press effect)
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -13,7 +13,6 @@ const AdminLogin = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // If already authenticated, redirect to home
     if (isAuthenticated) {
       navigate("/", { replace: true });
     }
@@ -29,18 +28,22 @@ const AdminLogin = () => {
     }
   };
 
-  // If coming from protected route, show message
   const from = location.state?.from?.pathname || "/";
 
   return (
     <div
       style={{
+        margin: 0,
+        padding: 0,
+        boxSizing: "border-box",
+        width: "100%",
         minHeight: "100vh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         backgroundColor: "#0b2b52",
         fontFamily: "Poppins, sans-serif",
+        overflow: "hidden",
       }}
     >
       <div
@@ -62,6 +65,7 @@ const AdminLogin = () => {
         >
           Admin Login
         </h2>
+
         {from !== "/" && (
           <p
             style={{ textAlign: "center", color: "#666", marginBottom: "1rem" }}
@@ -69,6 +73,7 @@ const AdminLogin = () => {
             Please log in to access the form.
           </p>
         )}
+
         <form
           onSubmit={handleSubmit}
           style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
@@ -88,6 +93,8 @@ const AdminLogin = () => {
               outlineColor: "#0078d7",
             }}
           />
+
+          {/* Password + Eye Icon */}
           <div style={{ position: "relative" }}>
             <input
               type={showPassword ? "text" : "password"}
@@ -104,6 +111,8 @@ const AdminLogin = () => {
                 outlineColor: "#0078d7",
               }}
             />
+
+            {/* Eye Button */}
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -115,16 +124,20 @@ const AdminLogin = () => {
                 background: "none",
                 border: "none",
                 cursor: "pointer",
-                fontSize: "16px",
-                color: "#666",
+                fontSize: "18px",
+                color: "#555",
+                padding: "4px",
               }}
             >
               {showPassword ? "👁" : "👁‍🗨"}
             </button>
           </div>
+
           {error && (
             <p style={{ color: "red", textAlign: "center" }}>{error}</p>
           )}
+
+          {/* Login Button with Press Effect */}
           <button
             type="submit"
             style={{
@@ -136,6 +149,19 @@ const AdminLogin = () => {
               borderRadius: "6px",
               cursor: "pointer",
               fontWeight: "500",
+              transition: "transform 0.1s ease, opacity 0.1s ease",
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.transform = "scale(0.94)";
+              e.currentTarget.style.opacity = "0.85";
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.opacity = "1";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.opacity = "1";
             }}
           >
             Login

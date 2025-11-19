@@ -1,4 +1,4 @@
-// src/components/DetailsPage.js (scroll-to-top only — with floating visibility button)
+// src/components/DetailsPage.js (Fixed for mobile scroll)
 import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
@@ -6,7 +6,7 @@ import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
 import CryptoJS from "crypto-js";
 
-const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!"; // must match Form
+const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!";
 
 const marathiDigitsMap = {
   0: "०",
@@ -39,7 +39,6 @@ const formatDateToMarathi = (dateStr) => {
   )}`;
 };
 
-// decrypt AES ciphertext -> object
 const decryptData = (ciphertext) => {
   try {
     const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
@@ -55,15 +54,10 @@ const decryptData = (ciphertext) => {
 const DetailsPage = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
-
-  // scrollable container ref
   const cardRef = useRef(null);
-
-  // show floating 'Top' button when card scroll passes threshold
   const [visible, setVisible] = useState(false);
-  const SCROLL_THRESHOLD = 300; // px inside card
+  const SCROLL_THRESHOLD = 200;
 
-  // decrypt if available
   const decrypted = useMemo(() => {
     const encrypted =
       query.get("data") || query.get("Data") || query.get("encrypted");
@@ -75,7 +69,6 @@ const DetailsPage = () => {
     }
   }, [search]);
 
-  // prefer decrypted
   const entryNo = decrypted?.entryNo ?? query.get("entryNo") ?? "----";
   const entryName = decrypted?.entryName ?? query.get("entryName") ?? "----";
   const applicantName =
@@ -88,85 +81,45 @@ const DetailsPage = () => {
   const taluka = decrypted?.taluka ?? query.get("taluka") ?? "----";
   const district = decrypted?.district ?? query.get("district") ?? "----";
 
-  /**
-   * Robust smooth scroll-to-top for the card element.
-   * - Tries element.scrollTo({behavior:'smooth'}) first.
-   * - Falls back to a rAF animation if needed (300ms ease).
-   * - As last resort, scroll window.
-   */
   const scrollToTop = () => {
     const el = cardRef.current;
 
-    // helper: rAF smooth animation
-    const animateScroll = (element, from, to, duration = 300) => {
-      const start = performance.now();
-      const easeInOut = (t) => (t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t); // easeInOut
-      const frame = (now) => {
-        const elapsed = now - start;
-        const t = Math.min(1, elapsed / duration);
-        const eased = easeInOut(t);
-        const current = Math.round(from + (to - from) * eased);
-        element.scrollTop = current;
-        if (t < 1) requestAnimationFrame(frame);
-        else element.scrollTop = to; // ensure exact final
-      };
-      requestAnimationFrame(frame);
-    };
-
-    if (el && typeof el.scrollTo === "function") {
-      try {
-        // try native smooth scroll first
-        el.scrollTo({ top: 0, behavior: "smooth" });
-        // ensure final position after short delay
-        setTimeout(() => {
-          if (el.scrollTop > 1) {
-            animateScroll(el, el.scrollTop, 0, 300);
-          } else {
-            el.scrollTop = 0;
-          }
-        }, 350);
-        return;
-      } catch {
-        // ignore and fallback to animation
-      }
-    }
-
-    if (el) {
-      // fallback animation
-      animateScroll(el, el.scrollTop || 0, 0, 300);
+    if (!el) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
-    // last resort: window scroll
-    try {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      setTimeout(() => {
-        if (window.scrollY > 1) window.scrollTo({ top: 0, behavior: "auto" });
-      }, 350);
-    } catch {
-      window.scrollTo(0, 0);
-    }
+    // Force scroll to top with multiple fallback methods
+    const forceScroll = () => {
+      el.scrollTop = 0;
+      el.scrollTo?.(0, 0);
+      el.scrollTo?.({ top: 0, behavior: "smooth" });
+    };
+
+    // Immediate scroll
+    forceScroll();
+
+    // Delayed scroll for stubborn browsers
+    setTimeout(forceScroll, 10);
+    setTimeout(forceScroll, 50);
+
+    // Also scroll window as backup
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Attach scroll listener to cardRef to toggle floating button visibility
   useEffect(() => {
     const el = cardRef.current;
     if (!el) return;
 
     const onScroll = () => {
-      if (el.scrollTop > SCROLL_THRESHOLD) setVisible(true);
-      else setVisible(false);
+      const scTop = el.scrollTop || 0;
+      setVisible(scTop > SCROLL_THRESHOLD);
     };
 
-    // Add listener
     el.addEventListener("scroll", onScroll, { passive: true });
-
-    // initialize visibility in case already scrolled
     onScroll();
 
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-    };
+    return () => el.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
@@ -176,12 +129,12 @@ const DetailsPage = () => {
         minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
-        alignItems: "center",
+        alignItems: "flex-start",
         padding: "1rem",
         fontFamily: `"Noto Sans Devanagari", "Segoe UI", Roboto, sans-serif`,
+        overflow: "hidden",
       }}
     >
-      {/* Scrollable card */}
       <div
         ref={cardRef}
         style={{
@@ -191,12 +144,12 @@ const DetailsPage = () => {
           maxWidth: "500px",
           width: "100%",
           padding: "1.5rem",
-          maxHeight: "calc(100vh - 40px)",
-          overflowY: "auto",
-          position: "relative", // allow absolute children if needed
+          maxHeight: "calc(100vh - 2rem)",
+          overflowY: "scroll",
+          WebkitOverflowScrolling: "touch",
+          position: "relative",
         }}
       >
-        {/* Logo + Title */}
         <div style={{ textAlign: "center" }}>
           <img src={logo} alt="आपले सरकार" style={{ width: "120px" }} />
 
@@ -210,10 +163,7 @@ const DetailsPage = () => {
               gap: "10px",
               fontSize: "clamp(16px, 4vw, 24px)",
               fontWeight: 700,
-              flexWrap: "nowrap",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
+              flexWrap: "wrap",
             }}
           >
             <img
@@ -235,7 +185,6 @@ const DetailsPage = () => {
           </p>
         </div>
 
-        {/* Certificate Box */}
         <div
           style={{
             border: "1px solid #ccc",
@@ -274,7 +223,6 @@ const DetailsPage = () => {
           </p>
         </div>
 
-        {/* Footer */}
         <p
           style={{
             fontSize: "14px",
@@ -288,24 +236,22 @@ const DetailsPage = () => {
           {district} यांचे वतीने वितरित केलेला आहे.
         </p>
 
-        {/* Back button (Scroll Only) */}
         <div style={{ marginTop: "1rem", textAlign: "left" }}>
           <button className="back-button" title="back" onClick={scrollToTop}>
             Back
           </button>
         </div>
 
-        {/* Floating Top button (shows when card scrolled past threshold) */}
         <button
           onClick={scrollToTop}
           aria-label="Scroll to top"
           style={{
-            display: visible ? "inline-flex" : "none",
+            display: visible ? "flex" : "none",
             position: "fixed",
             right: 20,
             bottom: 40,
             zIndex: 1200,
-            padding: "10px 12px",
+            padding: "10px 14px",
             borderRadius: 8,
             border: "none",
             background: "#0078d7",
@@ -313,6 +259,10 @@ const DetailsPage = () => {
             boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
             cursor: "pointer",
             fontSize: 14,
+            fontWeight: 600,
+            alignItems: "center",
+            justifyContent: "center",
+            touchAction: "manipulation",
           }}
         >
           ⬆️ Top
