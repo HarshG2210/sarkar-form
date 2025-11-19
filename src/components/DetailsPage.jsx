@@ -1,5 +1,5 @@
-// src/components/DetailsPage.js (scroll-to-top only — robust & phone-friendly)
-import React, { useMemo, useRef } from "react";
+// src/components/DetailsPage.js (scroll-to-top only — with floating visibility button)
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import certificate from "../assets/certificate.png";
@@ -59,6 +59,10 @@ const DetailsPage = () => {
   // scrollable container ref
   const cardRef = useRef(null);
 
+  // show floating 'Top' button when card scroll passes threshold
+  const [visible, setVisible] = useState(false);
+  const SCROLL_THRESHOLD = 300; // px inside card
+
   // decrypt if available
   const decrypted = useMemo(() => {
     const encrypted =
@@ -113,10 +117,9 @@ const DetailsPage = () => {
       try {
         // try native smooth scroll first
         el.scrollTo({ top: 0, behavior: "smooth" });
-        // Some mobile browsers report smooth scroll but are jumpy; ensure final position after 350ms
+        // ensure final position after short delay
         setTimeout(() => {
           if (el.scrollTop > 1) {
-            // animate as fallback to guarantee it reaches top smoothly
             animateScroll(el, el.scrollTop, 0, 300);
           } else {
             el.scrollTop = 0;
@@ -145,6 +148,27 @@ const DetailsPage = () => {
     }
   };
 
+  // Attach scroll listener to cardRef to toggle floating button visibility
+  useEffect(() => {
+    const el = cardRef.current;
+    if (!el) return;
+
+    const onScroll = () => {
+      if (el.scrollTop > SCROLL_THRESHOLD) setVisible(true);
+      else setVisible(false);
+    };
+
+    // Add listener
+    el.addEventListener("scroll", onScroll, { passive: true });
+
+    // initialize visibility in case already scrolled
+    onScroll();
+
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, []);
+
   return (
     <div
       style={{
@@ -169,6 +193,7 @@ const DetailsPage = () => {
           padding: "1.5rem",
           maxHeight: "calc(100vh - 40px)",
           overflowY: "auto",
+          position: "relative", // allow absolute children if needed
         }}
       >
         {/* Logo + Title */}
@@ -269,6 +294,29 @@ const DetailsPage = () => {
             Back
           </button>
         </div>
+
+        {/* Floating Top button (shows when card scrolled past threshold) */}
+        <button
+          onClick={scrollToTop}
+          aria-label="Scroll to top"
+          style={{
+            display: visible ? "inline-flex" : "none",
+            position: "fixed",
+            right: 20,
+            bottom: 40,
+            zIndex: 1200,
+            padding: "10px 12px",
+            borderRadius: 8,
+            border: "none",
+            background: "#0078d7",
+            color: "#fff",
+            boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
+            cursor: "pointer",
+            fontSize: 14,
+          }}
+        >
+          ⬆️ Top
+        </button>
       </div>
     </div>
   );
