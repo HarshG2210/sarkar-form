@@ -1,15 +1,15 @@
-// src/pages/Home.js (Updated - Add logout button)
 import React from "react";
-import Form from "../components/Form";
-import { useAuth } from "../contexts/AuthContext";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Form from "../components/Form";
+import { adminLogout } from "../redux/slices/adminAuthSlice";
 
 const Home = () => {
-  const { logout } = useAuth();
+  const dispatch = useDispatch();
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    dispatch(adminLogout());
     navigate("/login");
   };
 
@@ -33,6 +33,7 @@ const Home = () => {
         <h1 style={{ textAlign: "center", color: "#0078d7" }}>
           प्रमाणपत्र (दाखला) फॉर्म
         </h1>
+
         <button
           onClick={handleLogout}
           style={{
@@ -47,6 +48,7 @@ const Home = () => {
           Logout
         </button>
       </div>
+
       <Form />
     </div>
   );

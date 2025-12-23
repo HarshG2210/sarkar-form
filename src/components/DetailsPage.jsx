@@ -1,12 +1,15 @@
-// src/components/DetailsPage.js (Fixed for mobile scroll)
-import React, { useMemo, useRef, useState, useEffect } from "react";
+// src/components/DetailsPage.js (QR + Encrypted + DB fetch support)
+import React, { useRef, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
 import CryptoJS from "crypto-js";
+import { supabase } from "../supabase/client";
 
 const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!";
+
+/* ---------------- MARATHI DIGITS ---------------- */
 
 const marathiDigitsMap = {
   0: "०",
@@ -39,11 +42,13 @@ const formatDateToMarathi = (dateStr) => {
   )}`;
 };
 
+/* ---------------- DECRYPT ---------------- */
+
 const decryptData = (ciphertext) => {
   try {
     const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
     const plaintext = bytes.toString(CryptoJS.enc.Utf8);
-    if (!plaintext) throw new Error("Empty plaintext after decryption");
+    if (!plaintext) throw new Error("Empty plaintext");
     return JSON.parse(plaintext);
   } catch (err) {
     console.warn("Decryption failed", err);
@@ -51,23 +56,58 @@ const decryptData = (ciphertext) => {
   }
 };
 
+/* ================= COMPONENT ================= */
+
 const DetailsPage = () => {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
+
   const cardRef = useRef(null);
   const [visible, setVisible] = useState(false);
+  const [decrypted, setDecrypted] = useState(null);
+
   const SCROLL_THRESHOLD = 200;
 
-  const decrypted = useMemo(() => {
+  /* ---------- DATA LOADING LOGIC ---------- */
+
+  useEffect(() => {
     const encrypted =
       query.get("data") || query.get("Data") || query.get("encrypted");
-    if (!encrypted) return null;
-    try {
-      return decryptData(decodeURIComponent(encrypted));
-    } catch {
-      return null;
+
+    const id = query.get("id");
+
+    // CASE 1: encrypted data directly in URL
+    if (encrypted) {
+      try {
+        const result = decryptData(decodeURIComponent(encrypted));
+        setDecrypted(result);
+      } catch {
+        setDecrypted(null);
+      }
+      return;
+    }
+
+    // CASE 2: QR scanned → fetch encrypted_payload from Supabase
+    if (id) {
+      (async () => {
+        const { data, error } = await supabase
+          .from("forms")
+          .select("encrypted_payload")
+          .eq("id", id)
+          .single();
+
+        if (error || !data?.encrypted_payload) {
+          console.warn("QR data not found");
+          return;
+        }
+
+        const decryptedResult = decryptData(data.encrypted_payload);
+        setDecrypted(decryptedResult);
+      })();
     }
   }, [search]);
+
+  /* ---------- FIELD MAPPING (UNCHANGED) ---------- */
 
   const entryNo = decrypted?.entryNo ?? query.get("entryNo") ?? "----";
   const entryName = decrypted?.entryName ?? query.get("entryName") ?? "----";
@@ -81,29 +121,16 @@ const DetailsPage = () => {
   const taluka = decrypted?.taluka ?? query.get("taluka") ?? "----";
   const district = decrypted?.district ?? query.get("district") ?? "----";
 
+  /* ---------- SCROLL LOGIC ---------- */
+
   const scrollToTop = () => {
     const el = cardRef.current;
-
     if (!el) {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
-    // Force scroll to top with multiple fallback methods
-    const forceScroll = () => {
-      el.scrollTop = 0;
-      el.scrollTo?.(0, 0);
-      el.scrollTo?.({ top: 0, behavior: "smooth" });
-    };
-
-    // Immediate scroll
-    forceScroll();
-
-    // Delayed scroll for stubborn browsers
-    setTimeout(forceScroll, 10);
-    setTimeout(forceScroll, 50);
-
-    // Also scroll window as backup
+    el.scrollTop = 0;
+    el.scrollTo?.({ top: 0, behavior: "smooth" });
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -112,15 +139,14 @@ const DetailsPage = () => {
     if (!el) return;
 
     const onScroll = () => {
-      const scTop = el.scrollTop || 0;
-      setVisible(scTop > SCROLL_THRESHOLD);
+      setVisible(el.scrollTop > SCROLL_THRESHOLD);
     };
 
     el.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
-
     return () => el.removeEventListener("scroll", onScroll);
   }, []);
+
+  /* ================= UI (UNCHANGED) ================= */
 
   return (
     <div
@@ -146,6 +172,8 @@ const DetailsPage = () => {
           padding: "1.5rem",
           maxHeight: "calc(100vh - 2rem)",
           overflowY: "scroll",
+          overflowX: "hidden",
+          WebkitMaskImage: "-webkit-radial-gradient(white, black)",
           WebkitOverflowScrolling: "touch",
           position: "relative",
         }}
@@ -174,9 +202,7 @@ const DetailsPage = () => {
                 flexShrink: 0,
               }}
             />
-            <span style={{ lineHeight: 1, minWidth: 0 }}>
-              प्रमाणपत्र (दाखला) सत्यापन
-            </span>
+            <span>प्रमाणपत्र (दाखला) सत्यापन</span>
           </h2>
 
           <p style={{ fontSize: "15px" }}>
@@ -196,30 +222,21 @@ const DetailsPage = () => {
           }}
         >
           <p>
-            दाखला क्रमांक -{" "}
-            <strong>
-              {entryNo !== "----" ? toMarathiDigits(entryNo) : "----"}
-            </strong>
+            दाखला क्रमांक - <strong>{toMarathiDigits(entryNo)}</strong>
           </p>
-
           <p>
             दाखल्याचे नाव - <strong>{entryName}</strong>
           </p>
-
           <p>
             दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
             <strong>{applicantName}</strong>
           </p>
-
           <p>
             ग्रामसेवकांचे नाव - <strong>{gramsevakName}</strong>
           </p>
-
           <p>
             दाखला वितरण दिनांक -{" "}
-            <strong>
-              {issueDateRaw ? formatDateToMarathi(issueDateRaw) : "----"}
-            </strong>
+            <strong>{formatDateToMarathi(issueDateRaw)}</strong>
           </p>
         </div>
 
@@ -227,8 +244,6 @@ const DetailsPage = () => {
           style={{
             fontSize: "14px",
             marginTop: "1.5rem",
-            color: "#333",
-            lineHeight: "1.6",
             textAlign: "center",
           }}
         >
@@ -236,37 +251,27 @@ const DetailsPage = () => {
           {district} यांचे वतीने वितरित केलेला आहे.
         </p>
 
-        <div style={{ marginTop: "1rem", textAlign: "left" }}>
-          <button className="back-button" title="back" onClick={scrollToTop}>
-            Back
-          </button>
-        </div>
-
-        <button
-          onClick={scrollToTop}
-          aria-label="Scroll to top"
-          style={{
-            display: visible ? "flex" : "none",
-            position: "fixed",
-            right: 20,
-            bottom: 40,
-            zIndex: 1200,
-            padding: "10px 14px",
-            borderRadius: 8,
-            border: "none",
-            background: "#0078d7",
-            color: "#fff",
-            boxShadow: "0 6px 18px rgba(0,0,0,0.18)",
-            cursor: "pointer",
-            fontSize: 14,
-            fontWeight: 600,
-            alignItems: "center",
-            justifyContent: "center",
-            touchAction: "manipulation",
-          }}
-        >
-          ⬆️ Top
+        <button onClick={scrollToTop} className="back-button">
+          Back
         </button>
+
+        {visible && (
+          <button
+            onClick={scrollToTop}
+            style={{
+              position: "fixed",
+              right: 20,
+              bottom: 40,
+              padding: "10px 14px",
+              borderRadius: 8,
+              background: "#0078d7",
+              color: "#fff",
+              border: "none",
+            }}
+          >
+            ⬆️ Top
+          </button>
+        )}
       </div>
     </div>
   );

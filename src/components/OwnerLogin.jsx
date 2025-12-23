@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate } from "react-router-dom";
-import { adminLoginRequest } from "../redux/slices/adminAuthSlice";
+import { ownerLoginRequest } from "../redux/slices/ownerAuthSlice";
 
-export default function AdminLogin() {
+export default function OwnerLogin() {
   const dispatch = useDispatch();
-  const { user, loading, error } = useSelector((s) => s.adminAuth);
+  const { user, loading, error } = useSelector((s) => s.ownerAuth);
 
   const [showPassword, setShowPassword] = useState(false);
 
-  if (user) return <Navigate to="/" />;
+  // If already logged in as owner, redirect
+  if (user) return <Navigate to="/owner-account" />;
 
   const submit = (e) => {
     e.preventDefault();
+
     dispatch(
-      adminLoginRequest({
+      ownerLoginRequest({
         email: e.target.email.value,
         password: e.target.password.value,
       })
@@ -24,16 +26,16 @@ export default function AdminLogin() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h2 style={styles.title}>Admin Login</h2>
-        <p style={styles.subtitle}>Sign in to access the dashboard</p>
+        <h2 style={styles.title}>Owner Login</h2>
+        <p style={styles.subtitle}>Sign in to access owner dashboard</p>
 
         <form onSubmit={submit} style={styles.form}>
-          {/* Email */}
+          {/* Username */}
           <div style={styles.inputGroup}>
             <label style={styles.label}>Username</label>
             <input
               name="email"
-              placeholder="admin"
+              placeholder="Owner Admin"
               required
               style={styles.input}
             />
@@ -128,24 +130,10 @@ const styles = {
     fontSize: "14px",
     outline: "none",
   },
-  passwordWrapper: {
-    position: "relative",
-  },
-  eyeButton: {
-    position: "absolute",
-    right: "10px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "none",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "18px",
-  },
   inputContainer: {
     position: "relative",
     width: "85%",
   },
-
   passwordInput: {
     width: "100%",
     padding: "0.7rem 2.6rem 0.7rem 0.8rem",
@@ -154,7 +142,6 @@ const styles = {
     fontSize: "14px",
     outline: "none",
   },
-
   eyeIcon: {
     position: "absolute",
     right: "10px",
@@ -175,8 +162,6 @@ const styles = {
     fontSize: "15px",
     fontWeight: 500,
     cursor: "pointer",
-    transition: "0.2s ease",
-    opacity: 1,
   },
   error: {
     color: "#e53935",
