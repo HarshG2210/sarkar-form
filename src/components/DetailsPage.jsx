@@ -9,7 +9,7 @@ import { supabase } from "../supabase/client";
 
 const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!";
 
-/* ---------------- MARATHI DIGITS ---------------- */
+/* ---------------- MARATHI ---------------- */
 
 const marathiDigitsMap = {
   0: "०",
