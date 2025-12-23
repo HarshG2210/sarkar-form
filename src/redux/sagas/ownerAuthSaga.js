@@ -4,7 +4,7 @@ import {
   ownerLoginSuccess,
   ownerLoginFailure,
 } from "../slices/ownerAuthSlice";
-import { supabase } from "../../supabase/client";
+import { supabase } from "@/supabase/client";
 
 function* ownerLoginSaga(action) {
   try {
