@@ -1,5 +1,5 @@
 import { call, put, takeLatest } from "redux-saga/effects";
-import { supabase } from "../../supabase/client";
+import { supabase } from "@/supabase/client";
 import {
   fetchFormsRequest,
   fetchFormsSuccess,
