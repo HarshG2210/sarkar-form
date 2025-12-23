@@ -4,7 +4,7 @@ import {
   adminLoginSuccess,
   adminLoginFailure,
 } from "../slices/adminAuthSlice";
-import { supabase } from "../../supabase/client.js";
+import { supabase } from "@/supabase/client";
 
 function* adminLoginSaga(action) {
   try {
