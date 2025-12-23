@@ -6,7 +6,7 @@ import { submitFormRequest } from "../redux/slices/formSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-const SECRET_KEY = import.meta.env.VITE_SECRET_KEY;
+const SECRET_KEY = "gp-secret-key-123!";
 
 export default function Form() {
   const dispatch = useDispatch();
