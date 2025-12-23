@@ -47,6 +47,21 @@ export default function Form() {
     );
   };
 
+  const handleClear = () => {
+    setFormData({
+      gramPanchayat: "",
+      taluka: "",
+      district: "",
+      entryNo: "",
+      entryName: "",
+      applicantName: "",
+      gramsevakName: "",
+      issueDate: "",
+    });
+    setQrUrl("");
+    setQrVisible(false);
+  };
+
   /* ✅ USE DB ROW ID */
   useEffect(() => {
     if (!lastInsertedId || !hasSubmittedRef.current) return;
@@ -109,9 +124,19 @@ export default function Form() {
             </label>
           ))}
 
-          <button style={primaryButton} disabled={loading}>
-            {loading ? "Submitting..." : "QR कोड तयार करा"}
-          </button>
+          <div style={buttonContainer}>
+            <button style={primaryButton} disabled={loading}>
+              {loading ? "Submitting..." : "QR कोड तयार करा"}
+            </button>
+            <button
+              type="button"
+              onClick={handleClear}
+              style={dangerButton}
+              disabled={loading}
+            >
+              साफ करा
+            </button>
+          </div>
         </form>
 
         {qrVisible && (
@@ -169,6 +194,11 @@ const inputStyle = {
   border: "1px solid #ccc",
 };
 
+const buttonContainer = {
+  display: "flex",
+  gap: "0.5rem",
+};
+
 const primaryButton = {
   flex: 1,
   background: "#0078d7",
@@ -176,16 +206,18 @@ const primaryButton = {
   border: "none",
   padding: "0.6rem",
   borderRadius: "6px",
+  cursor: "pointer",
 };
 
-// const dangerButton = {
-//   flex: 1,
-//   background: "#f44336",
-//   color: "#fff",
-//   border: "none",
-//   padding: "0.6rem",
-//   borderRadius: "6px",
-// };
+const dangerButton = {
+  flex: 1,
+  background: "#f44336",
+  color: "#fff",
+  border: "none",
+  padding: "0.6rem",
+  borderRadius: "6px",
+  cursor: "pointer",
+};
 
 const successButton = {
   marginTop: "1.5rem",
