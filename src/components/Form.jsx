@@ -52,7 +52,7 @@ export default function Form() {
     if (!lastInsertedId || !hasSubmittedRef.current) return;
 
     const baseUrl = window.location.origin;
-    const finalUrl = `${baseUrl}${lastInsertedId}`;
+    const finalUrl = `${baseUrl}/${lastInsertedId}`;
 
     setQrUrl(finalUrl);
     setQrVisible(true);
