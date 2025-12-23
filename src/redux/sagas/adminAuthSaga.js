@@ -4,7 +4,7 @@ import {
   adminLoginSuccess,
   adminLoginFailure,
 } from "../slices/adminAuthSlice";
-import { supabase } from "../../supabase/client";
+import { supabase } from "@/supabase/client";
 
 function* adminLoginSaga(action) {
   try {
@@ -36,6 +36,3 @@ function* adminLoginSaga(action) {
 export default function* adminAuthSaga() {
   yield takeLatest(adminLoginRequest.type, adminLoginSaga);
 }
-
-
-
