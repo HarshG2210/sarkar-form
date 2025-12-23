@@ -1,12 +1,15 @@
 // src/components/DetailsPage.jsx
-import React, { useRef, useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+
+import React, { useEffect, useRef } from "react";
+import { useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchFormByIdRequest } from "../redux/slices/formSlice";
+
 import logo from "../assets/logo.png";
 import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
-import { supabase } from "../supabase/client";
 
-/* ---------------- MARATHI ---------------- */
+/* ================= MARATHI HELPERS ================= */
 
 const marathiDigitsMap = {
   0: "०",
@@ -24,59 +27,66 @@ const marathiDigitsMap = {
 const toMarathiDigits = (input = "") =>
   String(input)
     .split("")
-    .map((ch) =>
-      marathiDigitsMap[ch] !== undefined ? marathiDigitsMap[ch] : ch
-    )
+    .map((c) => marathiDigitsMap[c] ?? c)
     .join("");
 
 const formatDateToMarathi = (dateStr) => {
   if (!dateStr) return "----";
-  const [year, month, day] = dateStr.split("-");
-  return `${toMarathiDigits(day)}-${toMarathiDigits(month)}-${toMarathiDigits(
-    year
-  )}`;
+  const [y, m, d] = dateStr.split("-");
+  return `${toMarathiDigits(d)}-${toMarathiDigits(m)}-${toMarathiDigits(y)}`;
 };
 
 /* ================= COMPONENT ================= */
 
 export default function DetailsPage() {
-  const { search } = useLocation();
-  const query = new URLSearchParams(search);
-  const id = query.get("id");
+  /* ---------- GET ID FROM URL PATH ---------- */
+  const { id } = useParams();
 
+  const dispatch = useDispatch();
   const cardRef = useRef(null);
-  // const [visible, setVisible] = useState(false);
-  const [data, setData] = useState(null);
 
-  /* ---------- FETCH DATA BY ID ---------- */
+  const { selectedForm, loading, error } = useSelector((s) => s.form);
 
+  /* ---------- FETCH FORM BY ROW ID ---------- */
   useEffect(() => {
-    if (!id) return;
+    if (id) {
+      dispatch(fetchFormByIdRequest(id));
+    }
+  }, [id, dispatch]);
 
-    (async () => {
-      const { data, error } = await supabase
-        .from("forms")
-        .select("*")
-        .eq("id", id)
-        .single();
+  /* ---------- STATES ---------- */
+  if (loading) return null;
 
-      if (error) {
-        console.error("Invalid QR");
-        return;
-      }
+  if (error)
+    return (
+      <div
+        style={{
+          minHeight: "100vh",
+          background: "#0b2b52",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "18px",
+        }}
+      >
+        Invalid QR
+      </div>
+    );
 
-      setData(data);
-    })();
-  }, [id]);
+  if (!selectedForm) return null;
 
-  if (!data) return null;
+  const f = selectedForm;
 
   /* ---------- SCROLL ---------- */
-
   const scrollToTop = () => {
-    cardRef.current.scrollTop = 0;
+    if (cardRef.current) {
+      cardRef.current.scrollTop = 0;
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  /* ================= UI (UNCHANGED DESIGN) ================= */
 
   return (
     <div
@@ -106,47 +116,73 @@ export default function DetailsPage() {
           position: "relative",
         }}
       >
-        {/* -------- HEADER -------- */}
+        {/* ---------- HEADER ---------- */}
         <div style={{ textAlign: "center" }}>
           <img src={logo} alt="logo" style={{ width: 120 }} />
 
-          <h2 style={{ color: "#0078d7", fontWeight: 700 }}>
-            <img src={certificate} alt="" width={40} /> प्रमाणपत्र (दाखला)
-            सत्यापन
+          <h2
+            style={{
+              color: "#0078d7",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "10px",
+            }}
+          >
+            <img src={certificate} alt="certificate" width={40} />
+            प्रमाणपत्र (दाखला) सत्यापन
           </h2>
 
-          <p>
-            ग्रामपंचायत - {data.gram_panchayat}, तालुका - {data.taluka}, जिल्हा
-            - {data.district}
+          <p style={{ fontSize: "15px" }}>
+            ग्रामपंचायत - {f.gram_panchayat}, तालुका - {f.taluka}, जिल्हा -{" "}
+            {f.district}
           </p>
         </div>
 
-        {/* -------- BODY -------- */}
+        {/* ---------- BODY ---------- */}
         <div
-          style={{ border: "1px solid #ccc", padding: "1rem", marginTop: 16 }}
+          style={{
+            border: "1px solid #ccc",
+            borderRadius: "8px",
+            padding: "1rem",
+            marginTop: "1rem",
+            lineHeight: "1.8",
+            fontSize: "15px",
+          }}
         >
           <p>
-            दाखला क्रमांक - <strong>{toMarathiDigits(data.entry_no)}</strong>
+            दाखला क्रमांक - <strong>{toMarathiDigits(f.entry_no)}</strong>
           </p>
+
           <p>
-            दाखल्याचे नाव - <strong>{data.entry_name}</strong>
+            दाखल्याचे नाव - <strong>{f.entry_name}</strong>
           </p>
+
           <p>
             दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
-            <strong>{data.applicant_name}</strong>
+            <strong>{f.applicant_name}</strong>
           </p>
+
           <p>
-            ग्रामसेवकांचे नाव - <strong>{data.gramsevak_name}</strong>
+            ग्रामसेवकांचे नाव - <strong>{f.gramsevak_name}</strong>
           </p>
+
           <p>
             दाखला वितरण दिनांक -{" "}
-            <strong>{formatDateToMarathi(data.issue_date)}</strong>
+            <strong>{formatDateToMarathi(f.issue_date)}</strong>
           </p>
         </div>
 
-        <p style={{ marginTop: 20, textAlign: "center", fontSize: 14 }}>
-          * वरील दाखला ग्रामपंचायत {data.gram_panchayat}, तालुका - {data.taluka}
-          , जिल्हा - {data.district} यांचे वतीने वितरित केलेला आहे.
+        <p
+          style={{
+            fontSize: "14px",
+            marginTop: "1.5rem",
+            textAlign: "center",
+          }}
+        >
+          * वरील दाखला ग्रामपंचायत {f.gram_panchayat}, तालुका - {f.taluka},
+          जिल्हा - {f.district} यांचे वतीने वितरित केलेला आहे.
         </p>
 
         <button onClick={scrollToTop} className="back-button">

@@ -1,4 +1,3 @@
-// src/components/Form.jsx
 import React, { useState, useEffect, useRef } from "react";
 import QRCodeDisplay from "./QRCodeDisplay";
 import CryptoJS from "crypto-js";
@@ -29,45 +28,26 @@ export default function Form() {
   const [qrUrl, setQrUrl] = useState("");
   const [qrVisible, setQrVisible] = useState(false);
 
-  /* ---------- SAFE ENCRYPT ---------- */
-  const encryptData = (obj) => {
-    try {
-      return CryptoJS.AES.encrypt(JSON.stringify(obj), SECRET_KEY).toString();
-    } catch (e) {
-      console.error("Encryption error", e);
-      return null;
-    }
-  };
+  const encryptData = (obj) =>
+    CryptoJS.AES.encrypt(JSON.stringify(obj), SECRET_KEY).toString();
 
-  /* ---------- SUBMIT ---------- */
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    const encrypted = encryptData(formData);
-    if (!encrypted) {
-      toast.error("Encryption failed");
-      return;
-    }
-
-    hasSubmittedRef.current = true;
-
-    const baseUrl = window.location.origin;
-    const tempId = crypto.randomUUID(); // temporary UUID
-    const qrUrl = `${baseUrl}/details?id=${tempId}`;
 
     toast.dismiss();
     toast.info("Submitting form...", { autoClose: false });
 
+    hasSubmittedRef.current = true;
+
     dispatch(
       submitFormRequest({
         ...formData,
-        encryptedPayload: encrypted,
-        qrUrl, // ✅ SEND qr_url DURING INSERT
+        encryptedPayload: encryptData(formData),
       })
     );
   };
 
-  /* ---------- SUCCESS ---------- */
+  /* ✅ USE DB ROW ID */
   useEffect(() => {
     if (!lastInsertedId || !hasSubmittedRef.current) return;
 
@@ -83,7 +63,6 @@ export default function Form() {
     hasSubmittedRef.current = false;
   }, [lastInsertedId]);
 
-  /* ---------- ERROR ---------- */
   useEffect(() => {
     if (error) {
       toast.dismiss();
@@ -93,10 +72,10 @@ export default function Form() {
 
   /* ---------- Handle Redirect ---------- */
   const handleRedirect = () => {
-    if (!qrUrl) return;
+    if (!lastInsertedId) return;
 
     // Open details page generated from successful submit
-    window.open(qrUrl, "_blank");
+    window.open(lastInsertedId, "_blank");
   };
 
   return (
@@ -116,10 +95,9 @@ export default function Form() {
             ["district", "जिल्हा"],
           ].map(([name, label, type = "text"]) => (
             <label key={name}>
-              {label}:
+              {label}
               <input
                 type={type}
-                name={name}
                 value={formData[name]}
                 onChange={(e) =>
                   setFormData({ ...formData, [name]: e.target.value })
@@ -131,33 +109,9 @@ export default function Form() {
             </label>
           ))}
 
-          <div style={{ display: "flex", gap: "1rem" }}>
-            <button style={primaryButton} disabled={loading}>
-              {loading ? "Submitting..." : "QR कोड तयार करा"}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({
-                  gramPanchayat: "",
-                  taluka: "",
-                  district: "",
-                  entryNo: "",
-                  entryName: "",
-                  applicantName: "",
-                  gramsevakName: "",
-                  issueDate: "",
-                });
-                setQrVisible(false);
-                setQrUrl("");
-              }}
-              style={dangerButton}
-              disabled={loading}
-            >
-              सर्व साफ करा
-            </button>
-          </div>
+          <button style={primaryButton} disabled={loading}>
+            {loading ? "Submitting..." : "QR कोड तयार करा"}
+          </button>
         </form>
 
         {qrVisible && (
@@ -179,8 +133,7 @@ export default function Form() {
   );
 }
 
-/* ---------- ORIGINAL STYLES RESTORED ---------- */
-
+/* ---- styles unchanged ---- */
 const page = {
   minHeight: "100vh",
   background: "#0b2b52",
@@ -225,14 +178,14 @@ const primaryButton = {
   borderRadius: "6px",
 };
 
-const dangerButton = {
-  flex: 1,
-  background: "#f44336",
-  color: "#fff",
-  border: "none",
-  padding: "0.6rem",
-  borderRadius: "6px",
-};
+// const dangerButton = {
+//   flex: 1,
+//   background: "#f44336",
+//   color: "#fff",
+//   border: "none",
+//   padding: "0.6rem",
+//   borderRadius: "6px",
+// };
 
 const successButton = {
   marginTop: "1.5rem",

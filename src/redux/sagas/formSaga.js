@@ -1,10 +1,12 @@
-// src/redux/sagas/formSaga.js
 import { call, put, takeLatest } from "redux-saga/effects";
 import { supabase } from "../../supabase/client";
 import {
   fetchFormsRequest,
   fetchFormsSuccess,
   fetchFormsFailure,
+  fetchFormByIdRequest,
+  fetchFormByIdSuccess,
+  fetchFormByIdFailure,
   submitFormRequest,
   submitFormSuccess,
   submitFormFailure,
@@ -14,8 +16,7 @@ import {
   deleteAllFormsSuccess,
 } from "../slices/formSlice";
 
-/* ================= FETCH ALL FORMS ================= */
-
+/* ================= FETCH ALL ================= */
 function* fetchFormsSaga() {
   try {
     const { data, error } = yield call(() =>
@@ -29,12 +30,11 @@ function* fetchFormsSaga() {
 
     yield put(fetchFormsSuccess(data || []));
   } catch (err) {
-    yield put(fetchFormsFailure(err.message || "Failed to fetch forms"));
+    yield put(fetchFormsFailure(err.message));
   }
 }
 
-/* ================= SUBMIT FORM ================= */
-
+/* ================= SUBMIT ================= */
 function* submitFormSaga(action) {
   try {
     const p = action.payload;
@@ -53,24 +53,38 @@ function* submitFormSaga(action) {
             taluka: p.taluka,
             district: p.district,
             encrypted_payload: p.encryptedPayload,
-            qr_url: p.qrUrl, // ✅ stored correctly
           },
         ])
         .select("id")
         .single()
     );
 
-    if (error || !data?.id) {
-      throw error || new Error("Insert failed");
-    }
+    if (error || !data?.id) throw error;
 
     yield put(submitFormSuccess(data.id));
   } catch (err) {
-    yield put(submitFormFailure(err.message || "Form submission failed"));
+    yield put(submitFormFailure(err.message));
   }
 }
 
-/* ---------- DELETE SINGLE ---------- */
+/* ================= FETCH BY ID ================= */
+function* fetchFormByIdSaga(action) {
+  try {
+    const id = action.payload;
+
+    const { data, error } = yield call(() =>
+      supabase.from("forms").select("*").eq("id", id).single()
+    );
+
+    if (error || !data) throw error;
+
+    yield put(fetchFormByIdSuccess(data));
+  } catch {
+    yield put(fetchFormByIdFailure("Invalid QR"));
+  }
+}
+
+/* ================= DELETE ONE ================= */
 function* deleteFormSaga(action) {
   try {
     const id = action.payload;
@@ -87,7 +101,7 @@ function* deleteFormSaga(action) {
   }
 }
 
-/* ---------- DELETE ALL ---------- */
+/* ================= DELETE ALL ================= */
 function* deleteAllFormsSaga() {
   try {
     const { error } = yield call(() =>
@@ -103,9 +117,9 @@ function* deleteAllFormsSaga() {
 }
 
 /* ================= WATCHERS ================= */
-
 export default function* formSaga() {
   yield takeLatest(fetchFormsRequest.type, fetchFormsSaga);
+  yield takeLatest(fetchFormByIdRequest.type, fetchFormByIdSaga);
   yield takeLatest(submitFormRequest.type, submitFormSaga);
   yield takeLatest(deleteFormRequest.type, deleteFormSaga);
   yield takeLatest(deleteAllFormsRequest.type, deleteAllFormsSaga);

@@ -46,7 +46,7 @@ export default function App() {
         }
       />
 
-      <Route path="/details" element={<DetailsPage />} />
+      <Route path="/:id" element={<DetailsPage />} />
     </Routes>
   );
 }

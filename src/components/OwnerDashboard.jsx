@@ -12,6 +12,7 @@ export default function OwnerDashboard() {
   const navigate = useNavigate();
 
   const { forms, loading } = useSelector((s) => s.form);
+  console.log("forms", forms);
 
   const [page, setPage] = useState(1);
 
@@ -27,7 +28,6 @@ export default function OwnerDashboard() {
     const start = (page - 1) * PAGE_SIZE;
     return forms.slice(start, start + PAGE_SIZE);
   }, [forms, page]);
-
   const goFirst = () => setPage(1);
   const goLast = () => setPage(totalPages);
   const goPrev = () => setPage((p) => Math.max(1, p - 1));
@@ -139,7 +139,7 @@ export default function OwnerDashboard() {
                       <td style={tdStyle}>{f.issue_date}</td>
                       <td style={tdStyle}>
                         <a
-                          href={f.qr_url}
+                          href={`${f.id}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           style={styles.qrBtn}
@@ -147,6 +147,7 @@ export default function OwnerDashboard() {
                           View
                         </a>
                       </td>
+
                       <td style={tdStyle}>
                         <button
                           onClick={() => handleDeleteOne(f.id)}
