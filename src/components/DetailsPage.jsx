@@ -1,13 +1,10 @@
-// src/components/DetailsPage.js (QR + Encrypted + DB fetch support)
+// src/components/DetailsPage.jsx
 import React, { useRef, useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import logo from "../assets/logo.png";
 import certificate from "../assets/certificate.png";
 import "./DetailsPage.css";
-import CryptoJS from "crypto-js";
 import { supabase } from "../supabase/client";
-
-const SECRET_KEY = import.meta.env.VITE_SECRET_KEY || "gp-secret-key-123!";
 
 /* ---------------- MARATHI ---------------- */
 
@@ -34,119 +31,52 @@ const toMarathiDigits = (input = "") =>
 
 const formatDateToMarathi = (dateStr) => {
   if (!dateStr) return "----";
-  const parts = dateStr.split("-");
-  if (parts.length < 3) return toMarathiDigits(dateStr);
-  const [year, month, day] = parts;
+  const [year, month, day] = dateStr.split("-");
   return `${toMarathiDigits(day)}-${toMarathiDigits(month)}-${toMarathiDigits(
     year
   )}`;
 };
 
-/* ---------------- DECRYPT ---------------- */
-
-const decryptData = (ciphertext) => {
-  try {
-    const bytes = CryptoJS.AES.decrypt(ciphertext, SECRET_KEY);
-    const plaintext = bytes.toString(CryptoJS.enc.Utf8);
-    if (!plaintext) throw new Error("Empty plaintext");
-    return JSON.parse(plaintext);
-  } catch (err) {
-    console.warn("Decryption failed", err);
-    return null;
-  }
-};
-
 /* ================= COMPONENT ================= */
 
-const DetailsPage = () => {
+export default function DetailsPage() {
   const { search } = useLocation();
   const query = new URLSearchParams(search);
+  const id = query.get("id");
 
   const cardRef = useRef(null);
-  const [visible, setVisible] = useState(false);
-  const [decrypted, setDecrypted] = useState(null);
+  // const [visible, setVisible] = useState(false);
+  const [data, setData] = useState(null);
 
-  const SCROLL_THRESHOLD = 200;
-
-  /* ---------- DATA LOADING LOGIC ---------- */
+  /* ---------- FETCH DATA BY ID ---------- */
 
   useEffect(() => {
-    const encrypted =
-      query.get("data") || query.get("Data") || query.get("encrypted");
+    if (!id) return;
 
-    const id = query.get("id");
+    (async () => {
+      const { data, error } = await supabase
+        .from("forms")
+        .select("*")
+        .eq("id", id)
+        .single();
 
-    // CASE 1: encrypted data directly in URL
-    if (encrypted) {
-      try {
-        const result = decryptData(decodeURIComponent(encrypted));
-        setDecrypted(result);
-      } catch {
-        setDecrypted(null);
+      if (error) {
+        console.error("Invalid QR");
+        return;
       }
-      return;
-    }
 
-    // CASE 2: QR scanned → fetch encrypted_payload from Supabase
-    if (id) {
-      (async () => {
-        const { data, error } = await supabase
-          .from("forms")
-          .select("encrypted_payload")
-          .eq("id", id)
-          .single();
+      setData(data);
+    })();
+  }, [id]);
 
-        if (error || !data?.encrypted_payload) {
-          console.warn("QR data not found");
-          return;
-        }
+  if (!data) return null;
 
-        const decryptedResult = decryptData(data.encrypted_payload);
-        setDecrypted(decryptedResult);
-      })();
-    }
-  }, [search]);
-
-  /* ---------- FIELD MAPPING (UNCHANGED) ---------- */
-
-  const entryNo = decrypted?.entryNo ?? query.get("entryNo") ?? "----";
-  const entryName = decrypted?.entryName ?? query.get("entryName") ?? "----";
-  const applicantName =
-    decrypted?.applicantName ?? query.get("applicantName") ?? "----";
-  const gramsevakName =
-    decrypted?.gramsevakName ?? query.get("gramsevakName") ?? "----";
-  const issueDateRaw = decrypted?.issueDate ?? query.get("issueDate") ?? "";
-  const gramPanchayat =
-    decrypted?.gramPanchayat ?? query.get("gramPanchayat") ?? "----";
-  const taluka = decrypted?.taluka ?? query.get("taluka") ?? "----";
-  const district = decrypted?.district ?? query.get("district") ?? "----";
-
-  /* ---------- SCROLL LOGIC ---------- */
+  /* ---------- SCROLL ---------- */
 
   const scrollToTop = () => {
-    const el = cardRef.current;
-    if (!el) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      return;
-    }
-    el.scrollTop = 0;
-    el.scrollTo?.({ top: 0, behavior: "smooth" });
+    cardRef.current.scrollTop = 0;
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
-
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-
-    const onScroll = () => {
-      setVisible(el.scrollTop > SCROLL_THRESHOLD);
-    };
-
-    el.addEventListener("scroll", onScroll, { passive: true });
-    return () => el.removeEventListener("scroll", onScroll);
-  }, []);
-
-  /* ================= UI (UNCHANGED) ================= */
 
   return (
     <div
@@ -155,10 +85,8 @@ const DetailsPage = () => {
         minHeight: "100vh",
         display: "flex",
         justifyContent: "center",
-        alignItems: "flex-start",
         padding: "1rem",
         fontFamily: `"Noto Sans Devanagari", "Segoe UI", Roboto, sans-serif`,
-        overflow: "hidden",
       }}
     >
       <div
@@ -178,103 +106,53 @@ const DetailsPage = () => {
           position: "relative",
         }}
       >
+        {/* -------- HEADER -------- */}
         <div style={{ textAlign: "center" }}>
-          <img src={logo} alt="आपले सरकार" style={{ width: "120px" }} />
+          <img src={logo} alt="logo" style={{ width: 120 }} />
 
-          <h2
-            style={{
-              color: "#0078d7",
-              marginBottom: "0.5rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "10px",
-              fontSize: "clamp(16px, 4vw, 24px)",
-              fontWeight: 700,
-              flexWrap: "wrap",
-            }}
-          >
-            <img
-              src={certificate}
-              alt="certificate"
-              style={{
-                width: "clamp(32px, 8vw, 50px)",
-                flexShrink: 0,
-              }}
-            />
-            <span>प्रमाणपत्र (दाखला) सत्यापन</span>
+          <h2 style={{ color: "#0078d7", fontWeight: 700 }}>
+            <img src={certificate} alt="" width={40} /> प्रमाणपत्र (दाखला)
+            सत्यापन
           </h2>
 
-          <p style={{ fontSize: "15px" }}>
-            ग्रामपंचायत - {gramPanchayat}, तालुका - {taluka}, जिल्हा -{" "}
-            {district}
+          <p>
+            ग्रामपंचायत - {data.gram_panchayat}, तालुका - {data.taluka}, जिल्हा
+            - {data.district}
           </p>
         </div>
 
+        {/* -------- BODY -------- */}
         <div
-          style={{
-            border: "1px solid #ccc",
-            borderRadius: "8px",
-            padding: "1rem",
-            lineHeight: "1.8",
-            fontSize: "15px",
-            marginTop: "1rem",
-          }}
+          style={{ border: "1px solid #ccc", padding: "1rem", marginTop: 16 }}
         >
           <p>
-            दाखला क्रमांक - <strong>{toMarathiDigits(entryNo)}</strong>
+            दाखला क्रमांक - <strong>{toMarathiDigits(data.entry_no)}</strong>
           </p>
           <p>
-            दाखल्याचे नाव - <strong>{entryName}</strong>
+            दाखल्याचे नाव - <strong>{data.entry_name}</strong>
           </p>
           <p>
             दाखला मागणी केलेल्या व्यक्तीचे नाव -{" "}
-            <strong>{applicantName}</strong>
+            <strong>{data.applicant_name}</strong>
           </p>
           <p>
-            ग्रामसेवकांचे नाव - <strong>{gramsevakName}</strong>
+            ग्रामसेवकांचे नाव - <strong>{data.gramsevak_name}</strong>
           </p>
           <p>
             दाखला वितरण दिनांक -{" "}
-            <strong>{formatDateToMarathi(issueDateRaw)}</strong>
+            <strong>{formatDateToMarathi(data.issue_date)}</strong>
           </p>
         </div>
 
-        <p
-          style={{
-            fontSize: "14px",
-            marginTop: "1.5rem",
-            textAlign: "center",
-          }}
-        >
-          * वरील दाखला ग्रामपंचायत {gramPanchayat}, तालुका - {taluka}, जिल्हा -{" "}
-          {district} यांचे वतीने वितरित केलेला आहे.
+        <p style={{ marginTop: 20, textAlign: "center", fontSize: 14 }}>
+          * वरील दाखला ग्रामपंचायत {data.gram_panchayat}, तालुका - {data.taluka}
+          , जिल्हा - {data.district} यांचे वतीने वितरित केलेला आहे.
         </p>
 
         <button onClick={scrollToTop} className="back-button">
           Back
         </button>
-
-        {visible && (
-          <button
-            onClick={scrollToTop}
-            style={{
-              position: "fixed",
-              right: 20,
-              bottom: 40,
-              padding: "10px 14px",
-              borderRadius: 8,
-              background: "#0078d7",
-              color: "#fff",
-              border: "none",
-            }}
-          >
-            ⬆️ Top
-          </button>
-        )}
       </div>
     </div>
   );
-};
-
-export default DetailsPage;
+}
