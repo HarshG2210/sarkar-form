@@ -12,7 +12,6 @@ export default function OwnerDashboard() {
   const navigate = useNavigate();
 
   const { forms, loading } = useSelector((s) => s.form);
-  console.log("forms", forms);
 
   const [page, setPage] = useState(1);
 

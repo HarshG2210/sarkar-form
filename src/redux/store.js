@@ -6,16 +6,16 @@ import adminAuthReducer from "../redux/slices/adminAuthSlice";
 import ownerAuthReducer from "../redux/slices/ownerAuthSlice";
 import formReducer from "../redux/slices/formSlice";
 
-// ✅ Root saga (admin + owner + form)
+// ✅ Root saga
 import rootSaga from "../redux/sagas/rootSaga";
 
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: {
-    adminAuth: adminAuthReducer, // 🔐 Admin auth
-    ownerAuth: ownerAuthReducer, // 🔐 Owner auth
-    form: formReducer, // 📄 Forms
+    adminAuth: adminAuthReducer,
+    ownerAuth: ownerAuthReducer,
+    form: formReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ thunk: false }).concat(sagaMiddleware),
